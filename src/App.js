@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { add, format } from "date-fns";
 import "./App.css";
 
@@ -47,14 +47,38 @@ const getGoogleCalendarLink = (
 
 const formatDateForDisplay = (raw) => format(new Date(raw), "EEEE, LLLL do");
 
+const getEventUrl = () => {
+  const { search } = window.location;
+
+  if (search === undefined) {
+    return undefined;
+  }
+
+  const parsedParams = new URLSearchParams(search);
+  return parsedParams.get("url");
+};
+
 function App() {
-  const [url, setUrl] = useState("");
+  const eventUrl = getEventUrl();
+  const [url, setUrl] = useState(eventUrl ? eventUrl : "");
   const [eventData, setEventData] = useState();
 
   const handleGetInfo = async () => {
-    const eventData = await fetchInfo(url);
-    setEventData(eventData);
+    const params = new URLSearchParams();
+    params.set("url", url);
+    document.location.search = params;
   };
+
+  useEffect(() => {
+    const getEventData = async () => {
+      const eventData = await fetchInfo(eventUrl);
+      setEventData(eventData);
+    };
+
+    if (eventUrl) {
+      getEventData();
+    }
+  }, [eventUrl]);
 
   return (
     <div className="app">
