@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { add, format } from "date-fns";
 import "./App.css";
 
-// http://localhost:8888/.netlify/functions/parseEvent?url=https%3A%2F%2Fwww.instagram.com%2Fp%2FCQlKElOFl0X%2F
 const fetchInfo = async (url) => {
   const res = await fetch(
     `/.netlify/functions/parseEvent?url=${encodeURIComponent(url)}`
@@ -12,16 +12,35 @@ const fetchInfo = async (url) => {
   return json;
 };
 
-const getGoogleCalendarLink = ({ description, date, location }) => {
-  // `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${The%20Big%20Show}&dates=20211001T230000Z/20211001T240000Z&details=Describe%20your%20event.%20Blah%20blah%20blah.&location=Spirit&trp=true`;
+const formatDate = (d) => format(d, "yyyyMMdd'T'HHmmss");
 
+const buildDateParam = (rawDate) => {
+  var start = new Date(rawDate);
+  var end = add(start, { hours: 3 });
+  return `${formatDate(start)}/${formatDate(end)}`;
+};
+
+// https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/google.md
+const getGoogleCalendarLink = (
+  { description, date: rawDate, location },
+  url
+) => {
   var searchParams = new URLSearchParams();
-  searchParams.set("text", description);
-  searchParams.set("dates", date);
-  searchParams.set("details", description);
-  searchParams.set("location", location);
+  searchParams.set("action", "TEMPLATE");
+  searchParams.set("trp", "true");
 
-  console.log(searchParams.toString());
+  searchParams.set("text", description);
+  searchParams.set("details", `${description}\n\n${url}`);
+
+  if (rawDate) {
+    searchParams.set("dates", buildDateParam(rawDate));
+  }
+
+  if (location) {
+    searchParams.set("location", location);
+  }
+
+  return `https://calendar.google.com/calendar/render?${searchParams.toString()}`;
 };
 
 function App() {
@@ -33,12 +52,26 @@ function App() {
     setEventData(eventData);
   };
 
-  console.log(eventData);
-
   return (
     <div className="App">
-      <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} />
-      <button onClick={handleGetInfo}>Get Event Info</button>
+      <div>
+        <input
+          type="text"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+        />
+        <button onClick={handleGetInfo}>Get Event Info</button>
+      </div>
+
+      {eventData !== undefined ? (
+        <div>
+          <p>{eventData.description}</p>
+          <p>{eventData.date}</p>
+          <a href={getGoogleCalendarLink(eventData, url)}>
+            add to google calendar
+          </a>
+        </div>
+      ) : undefined}
     </div>
   );
 }

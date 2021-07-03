@@ -3,8 +3,6 @@ const htmlmetaparser = require("htmlmetaparser");
 const htmlparser2 = require("htmlparser2");
 const got = require("got");
 
-// https%3A%2F%2Fwww.instagram.com%2Fp%2FCQlKElOFl0X%2F
-
 const getMeta = (url) =>
   new Promise(async (resolve, reject) => {
     const h = new htmlmetaparser.Handler(
@@ -19,7 +17,6 @@ const getMeta = (url) =>
     );
 
     const { body } = await got(url);
-    console.log(JSON.stringify(body, undefined, 2))
 
     const p = new htmlparser2.Parser(h, { decodeEntities: true });
     p.write(body);
@@ -28,12 +25,11 @@ const getMeta = (url) =>
 
 const getEventData = (meta) => {
   const jsonLd = meta.jsonld[0];
-  console.log(jsonLd);
 
   const eventData = {
     date: chrono.parseDate(jsonLd.caption),
     description: jsonLd.caption,
-    location: jsonLd.contentLocation.name,
+    location: jsonLd.contentLocation ? jsonLd.contentLocation.name : undefined,
   };
 
   return eventData;
@@ -41,12 +37,17 @@ const getEventData = (meta) => {
 
 exports.handler = async function (event, context) {
   const { url } = event.queryStringParameters;
-  console.log(url);
-  const meta = await getMeta(url);
-  const eventData = getEventData(meta);
+  // const meta = await getMeta(url);
+  // const eventData = getEventData(meta);
+
+  const fake = {
+    date: "2021-08-07T16:00:00.000Z",
+    description:
+      "First show in a long time and the first one with @whats_a_cormac on bass is August 7th at @thunderbirdmusichall supporting @apolojeesus\n\nSo excited to play for you. Come party!",
+  };
 
   return {
     statusCode: 200,
-    body: JSON.stringify(eventData),
+    body: JSON.stringify(fake),
   };
 };
