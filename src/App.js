@@ -12,12 +12,14 @@ const fetchInfo = async (url) => {
   return json;
 };
 
-const formatDate = (d) => format(d, "yyyyMMdd'T'HHmmss");
+const formatDateForGoogleCalendar = (d) => format(d, "yyyyMMdd'T'HHmmss");
 
 const buildDateParam = (rawDate) => {
   var start = new Date(rawDate);
   var end = add(start, { hours: 3 });
-  return `${formatDate(start)}/${formatDate(end)}`;
+  return `${formatDateForGoogleCalendar(start)}/${formatDateForGoogleCalendar(
+    end
+  )}`;
 };
 
 // https://github.com/InteractionDesignFoundation/add-event-to-calendar-docs/blob/master/services/google.md
@@ -43,6 +45,8 @@ const getGoogleCalendarLink = (
   return `https://calendar.google.com/calendar/render?${searchParams.toString()}`;
 };
 
+const formatDateForDisplay = (raw) => format(new Date(raw), "EEEE, LLLL do");
+
 function App() {
   const [url, setUrl] = useState("");
   const [eventData, setEventData] = useState();
@@ -53,11 +57,12 @@ function App() {
   };
 
   return (
-    <div className="App">
-      <div>
+    <div className="app">
+      <div className="form">
         <input
           type="text"
           value={url}
+          placeholder="url"
           onChange={(e) => setUrl(e.target.value)}
         />
         <button onClick={handleGetInfo}>Get Event Info</button>
@@ -65,8 +70,8 @@ function App() {
 
       {eventData !== undefined ? (
         <div>
+          <p>{formatDateForDisplay(eventData.date)}</p>
           <p>{eventData.description}</p>
-          <p>{eventData.date}</p>
           <a href={getGoogleCalendarLink(eventData, url)}>
             add to google calendar
           </a>
