@@ -37,17 +37,11 @@ const getEventData = (meta) => {
 
 exports.handler = async function (event, context) {
   const { url } = event.queryStringParameters;
-  // const meta = await getMeta(url);
-  // const eventData = getEventData(meta);
-
-  const fake = {
-    date: "2021-08-07T16:00:00.000Z",
-    description:
-      "First show in a long time and the first one with @whats_a_cormac on bass is August 7th at @thunderbirdmusichall supporting @apolojeesus\n\nSo excited to play for you. Come party!",
-  };
+  const meta = await getMeta(url);
+  const eventData = getEventData(meta);
 
   return {
     statusCode: 200,
-    body: JSON.stringify(fake),
+    body: JSON.stringify(eventData),
   };
 };
